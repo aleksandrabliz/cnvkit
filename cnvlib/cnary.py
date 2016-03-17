@@ -179,14 +179,17 @@ class CopyNumArray(gary.GenomicArray):
             # Female: no change
         return outprobes
 
-    def guess_xx(self, male_reference=False, verbose=True):
+    def guess_xx(self, male_reference=False, verbose=True, threshold=None):
         """Guess whether a sample is female from chrX relative coverages.
 
         Recommended cutoff values:
             -0.5 -- raw target data, not yet corrected
             +0.5 -- probe data already corrected on a male profile
         """
-        cutoff = 0.5 if male_reference else -0.5
+        if not threshold:
+            cutoff = 0.5 if male_reference else -0.5
+        elif threshold:
+            cutoff = int(threshold)
         # ENH - better coverage approach: take Z-scores or rank of +1,0 or 0,-1
         # based on the available probes, then choose which is more probable
         rel_chrx_cvg = self.get_relative_chrx_cvg()
