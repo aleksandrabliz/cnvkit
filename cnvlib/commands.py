@@ -495,9 +495,14 @@ def _cmd_reference(args):
         antitargets = [f for f in filenames if 'antitarget' in f]
         logging.info("Number of target and antitarget files: %d, %d",
                      len(targets), len(antitargets))
-        ref_probes = do_reference(targets, antitargets, args.fasta,
-                                  args.male_reference,
-                                  args.do_gc, args.do_edge, args.do_rmask)
+        if not args.tthreshold and not args.athreshold:
+            ref_probes = do_reference(targets, antitargets, args.fasta,
+                                      args.male_reference,
+                                      args.do_gc, args.do_edge, args.do_rmask)
+        elif args.tthreshold and args.athreshold:
+            ref_probes = do_reference(targets, antitargets, args.fasta,
+                                      args.male_reference,
+                                      args.do_gc, args.do_edge, args.do_rmask, args.tthreshold, args.athreshold)
     else:
         raise ValueError(usage_err_msg)
 
@@ -507,7 +512,7 @@ def _cmd_reference(args):
 
 
 def do_reference(target_fnames, antitarget_fnames, fa_fname=None,
-                 male_reference=False, do_gc=True, do_edge=True, do_rmask=True):
+                 male_reference=False, do_gc=True, do_edge=True, do_rmask=True, target_threshold=None, antitarget_threshold=None):
     """Compile a coverage reference from the given files (normal samples)."""
     core.assert_equal("Unequal number of target and antitarget files given",
                       targets=len(target_fnames),
@@ -519,10 +524,10 @@ def do_reference(target_fnames, antitarget_fnames, fa_fname=None,
     # Calculate & save probe centers
     ref_probes = reference.combine_probes(target_fnames, fa_fname,
                                           male_reference, True,
-                                          do_gc, do_edge, False)
+                                          do_gc, do_edge, False, target_threshold)
     ref_probes.add(reference.combine_probes(antitarget_fnames, fa_fname,
                                             male_reference, False,
-                                            do_gc, False, do_rmask))
+                                            do_gc, False, do_rmask, antitarget_threshold))
     ref_probes.center_all(skip_low=True)
     ref_probes.sort_columns()
     reference.warn_bad_probes(ref_probes)
@@ -561,8 +566,12 @@ P_reference.add_argument('-f', '--fasta',
         help="Reference genome, FASTA format (e.g. UCSC hg19.fa)")
 P_reference.add_argument('-t', '--targets',
         help="Target intervals (.bed or .list)")
+P_reference.add_argument('--tthreshold',
+        help="Threshold for relative X chromosome coverage counted from target intervals")
 P_reference.add_argument('-a', '--antitargets',
         help="Antitarget intervals (.bed or .list)")
+P_reference.add_argument('--athreshold',
+        help="Threshold for relative X chromosome coverage counted from antitarget intervals")
 P_reference.add_argument('-y', '--male-reference', action='store_true',
         help="""Create a male reference: shift female samples' chrX
                 log-coverage by -1, so the reference chrX average is -1.
