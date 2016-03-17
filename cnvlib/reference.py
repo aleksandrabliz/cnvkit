@@ -22,7 +22,7 @@ def bed2probes(bed_fname):
 
 
 def combine_probes(filenames, fa_fname, is_male_reference, skip_low,
-                   fix_gc, fix_edge, fix_rmask):
+                   fix_gc, fix_edge, fix_rmask, threshold = None):
     """Calculate the median coverage of each bin across multiple samples.
 
     Input:
@@ -64,7 +64,7 @@ def combine_probes(filenames, fa_fname, is_male_reference, skip_low,
     is_chr_x = (cnarr1.chromosome == cnarr1._chr_x_label)
     is_chr_y = (cnarr1.chromosome == cnarr1._chr_y_label)
     flat_coverage = cnarr1.expect_flat_cvg(is_male_reference)
-    def shift_sex_chroms(cnarr):
+    def shift_sex_chroms(cnarr, threshold=None):
         """Shift sample X and Y chromosomes to match the reference gender.
 
         Reference values:
@@ -84,7 +84,10 @@ def combine_probes(filenames, fa_fname, is_male_reference, skip_low,
             xy sample, xy ref: 0    (from -1)   +1
 
         """
-        is_sample_female = cnarr.guess_xx()
+        if not threshold:
+            is_sample_female = cnarr.guess_xx()
+        elif threshold:
+            is_sample_female = guess_xx(cnarr, threshold)
         cnarr['log2'] += flat_coverage
         if is_sample_female:
             # chrX already OK
@@ -95,10 +98,10 @@ def combine_probes(filenames, fa_fname, is_male_reference, skip_low,
             cnarr[is_chr_x | is_chr_y, 'log2'] += 1.0
 
     edge_bias = fix.get_edge_bias(cnarr1, params.INSERT_SIZE)
-    def bias_correct_coverage(cnarr):
+    def bias_correct_coverage(cnarr, new_threshold = None):
         """Perform bias corrections on the sample."""
         cnarr.center_all(skip_low=skip_low)
-        shift_sex_chroms(cnarr)
+        shift_sex_chroms(cnarr, new_threshold)
         # Skip bias corrections if most bins have no coverage (e.g. user error)
         if (cnarr['log2'] > params.NULL_LOG2_COVERAGE - params.MIN_REF_COVERAGE
            ).sum() <= len(cnarr) // 2:
@@ -117,7 +120,10 @@ def combine_probes(filenames, fa_fname, is_male_reference, skip_low,
         return cnarr['log2']
 
     # Pseudocount of 1 "flat" sample
-    all_coverages = [flat_coverage, bias_correct_coverage(cnarr1)]
+    if not threshold:
+        all_coverages = [flat_coverage, bias_correct_coverage(cnarr1)]
+    elif threshold:
+        all_coverages = [flat_coverage, bias_correct_coverage(cnarr1, new_threshold = threshold)]
     for fname in filenames[1:]:
         logging.info("Loading target %s", fname)
         cnarrx = CNA.read(fname)
