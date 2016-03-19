@@ -135,7 +135,10 @@ def combine_probes(filenames, fa_fname, is_male_reference, skip_low,
                 and (cnarr1['gene'] == cnarrx['gene']).all()):
             raise RuntimeError("%s probes do not match those in %s"
                                % (fname, filenames[0]))
-        all_coverages.append(bias_correct_coverage(cnarrx))
+        if not threshold:
+            all_coverages.append(bias_correct_coverage(cnarrx))
+        elif threshold:
+            all_coverages = [flat_coverage, bias_correct_coverage(cnarrx, new_threshold = threshold)]
     all_coverages = np.vstack(all_coverages)
 
     logging.info("Calculating average bin coverages")
