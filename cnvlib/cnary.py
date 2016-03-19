@@ -189,7 +189,7 @@ class CopyNumArray(gary.GenomicArray):
         if not threshold:
             cutoff = 0.5 if male_reference else -0.5
         elif threshold:
-            cutoff = int(threshold)
+            cutoff = float(threshold)
         # ENH - better coverage approach: take Z-scores or rank of +1,0 or 0,-1
         # based on the available probes, then choose which is more probable
         rel_chrx_cvg = self.get_relative_chrx_cvg()
