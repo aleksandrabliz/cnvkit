@@ -511,6 +511,7 @@ def _cmd_reference(args):
                                       args.male_reference,
                                       args.do_gc, args.do_edge, args.do_rmask, antitarget_threshold = args.athreshold)
         else:
+            print "No input threasolds for gender determination. Using standerd: -0.5 for raw target data and +0.5 for probe data already corrected on a male profile."
             ref_probes = do_reference(targets, antitargets, args.fasta,
                                       args.male_reference,
                                       args.do_gc, args.do_edge, args.do_rmask)
