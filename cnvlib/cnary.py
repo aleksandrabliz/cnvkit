@@ -188,8 +188,10 @@ class CopyNumArray(gary.GenomicArray):
         """
         if guess_xx_threshold is None:
             cutoff = 0.5 if male_reference else -0.5
+            print ("guess_xx_info: Cutoff for sex determination: ", cutoff)
         else:
             cutoff = float(guess_xx_threshold)
+            print ("guess_xx_info: Cutoff for sex determination: ", cutoff)
         # ENH - better coverage approach: take Z-scores or rank of +1,0 or 0,-1
         # based on the available probes, then choose which is more probable
         rel_chrx_cvg = self.get_relative_chrx_cvg()
