@@ -84,7 +84,7 @@ def combine_probes(filenames, fa_fname, is_male_reference, skip_low,
             xy sample, xy ref: 0    (from -1)   +1
 
         """
-        is_sample_female = cnarr.guess_xx(shift_sex_threshold)
+        is_sample_female = cnarr.guess_xx(guess_xx_threshold=shift_sex_threshold)
         cnarr['log2'] += flat_coverage
         if is_sample_female:
             # chrX already OK
